@@ -4,7 +4,7 @@
             <div class="row">
                 <div class="col-12">
                     <button class="btn btn-primary" v-if="activeButtonCreate" data-toggle="modal" data-target="#modal-create">Create</button>
-                    <button class="btn btn-primary ml-2" @click="AddListeActive" v-if="activeButtonValidate">Validate</button>
+                    <button class="btn btn-primary ml-2" @click="addListeActive" v-if="activeButtonValidate">Validate</button>
                     <button class="btn btn-primary ml-2" v-if="activeButtonCancel">Cancel</button>
                 </div>
                 <div class="col-12 mt-5">
@@ -19,16 +19,17 @@
                                 </div>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item" v-for="(item, index) in listeActive">
-                                        <div class="d-flex">
+                                        <div class="d-flex" :class="item.save == true ? 'backgroud-color-griss' : '' ">
                                             <div class="mr-auto p-2">
                                                 {{item.title}}
                                             </div>
-                                            <div class="p-2">
+                                            <div class="p-2" v-if="item.save">
+                                                
                                                 <a href="javascript:void(0)" @click="toListTerminated(index)">
                                                     <i class="fa-solid fa-check"></i>
                                                 </a>
                                             </div>
-                                            <div class="p-2">
+                                            <div class="p-2" v-if="item.save">
                                                 <a href="javascript:void(0)" @click="deleteItemsListeActive(index)">
                                                     <i class="fa fa-trash"></i>
                                                 </a>
@@ -114,7 +115,7 @@ export default {
     }
   },
   created() {
-   // this.getAllListeActive();
+    this.getAllListeActive();
   },
   methods:{
     addToListeActive(e){
@@ -123,8 +124,7 @@ export default {
             e.preventDefault();
             return null;
         }
-        axios.post
-        this.listeActive.push({ title: this.form.title, description: this.form.description });
+        this.listeActive.push({id:0, title: this.form.title, description: this.form.description,save:false });
         this.activeButtonValidate =true;
         this.activeButtonCancel =true;
         this.cancelModal();
@@ -135,38 +135,68 @@ export default {
         this.form.description   = "";
     },
     toListTerminated(index){
+        let id       = this.listeActive[index].id ? this.listeActive[index].id : 0;
         let title       = this.listeActive[index].title
         let description = this.listeActive[index].description
-        this.listeTerminate.push({ title: title, description: description });
+        this.listeTerminate.push({ id:id,title: title, description: description });
         this.listeActive.splice(index,1);
     },
     deleteItemsListeActive(index){
-        this.listeActive.splice(index,1);
+        let id = this.listeActive[index].id;
+        
+        if(id != 0 ){
+            this.deleteListeById(id).then(response=>{
+                this.getAllListeActive();
+            });
+        }
+        
     },
     deleteItemsListeTerminate(index){
-        this.listeTerminate.splice(index,1);
+        let id = this.listeActive[index].id;
+        
+        if(id != 0 ){
+            this.deleteListeById(id).then(response=>{
+                this.getAllListeActive();
+            });
+        }
     },
     getAllListeActive(){
+        this.listeActive= [];
         axios.get('/liste.php')
         .then(response => {
-            response = JSON.stringify(response.data);
-            console.log(response);
-            // response.forEach((value) => {
-            // this.listeTerminate.push({ title: value.title, description: value.$eventdescription });
-            // });
+            let data = response.data;
+
+            data.forEach((value) => {
+                this.listeActive.push({ id:value.id,title: value.title, description: value.$eventdescription,save : true });
+            });
         })
         .catch(error => {
             console.log(error)
         })
     },
-    AddListeActive(){
-        axios.post('/add.php',{todo:this.listeActive})
+    addListeActive(){
+        let filter = {save:0};
+        let data =  this.listeActive.filter(item => {
+            for (let key in filter) {
+                if (item[key] != 0)
+                return false;
+            }
+            return true;
+        });
+        axios.post('/add.php',{todo:JSON.stringify(data)})
         .then(response => {
-            response = JSON.stringify(response.data);
-            console.log(response);
-            // response.forEach((value) => {
-            // this.listeTerminate.push({ title: value.title, description: value.$eventdescription });
-            // });
+            this.activeButtonValidate =false;
+            this.activeButtonCancel =false;
+            this.getAllListeActive();
+        })
+        .catch(error => {
+            console.log(error)
+        })
+    },
+    async deleteListeById(idTodo){
+        return await axios.post('/delete.php',{id:idTodo})
+        .then(response => {
+            return true;
         })
         .catch(error => {
             console.log(error)
@@ -177,6 +207,8 @@ export default {
 }
 </script>
 <style>
-
+ .backgroud-color-griss{
+    background-color: gray;
+ }
 
 </style>

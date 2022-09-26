@@ -9,9 +9,10 @@ import "./assets/Global.css"
 import axios from 'axios'
 axios.defaults.baseURL = "http://localhost/php_crud_vuejs"
 
-// axios.defaults.headers.get['Accepts'] = 'application/json';
-// axios.defaults.headers.common['Access-Control-Allow-Origin'] = '*';
-// axios.defaults.headers.common['Access-Control-Allow-Methods'] =  'HEAD, GET, POST, PUT, DELETE';
-// axios.defaults.headers.common['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faHatWizard } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faHatWizard)
 
+// .component('font-awesome-icon', FontAwesomeIcon)
 createApp(App).use(cors).mount('#app')
